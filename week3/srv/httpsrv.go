@@ -3,6 +3,7 @@ package srv
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -11,7 +12,9 @@ type httpServer struct {
 }
 
 func (h *httpServer) Start() error {
-	return h.server.ListenAndServe()
+	err := h.server.ListenAndServe()
+	log.Println("http server stop")
+	return err
 }
 func (h *httpServer) Stop() error {
 	ctx, cancel := context.WithCancel(context.Background())

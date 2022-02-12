@@ -15,18 +15,20 @@ type server interface {
 }
 
 type app struct {
-	ctx    context.Context
-	cancel func()
-
 	servers []server
 }
 
-func (a *app) AddServer(servers ...server) {
-	a.servers = servers
+func NewApp(servers ...server)  *app {
+	return &app{
+		servers: servers,
+	}
 }
 func (a *app) Run() error {
 
-	g, ctx := errgroup.WithContext(a.ctx)
+	appCtx, cancel:= context.WithCancel(context.Background())
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(appCtx)
 
 	for _, srv := range a.servers {
 		srv := srv	//这里要格外注意，不解释了，找bug找了半天 MD。。。
@@ -35,8 +37,7 @@ func (a *app) Run() error {
 			return srv.Stop()
 		})
 		g.Go(func() error {
-			err := srv.Start()
-			return err
+			return srv.Start()
 		})
 	}
 
@@ -48,7 +49,7 @@ func (a *app) Run() error {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-s:
-				a.Stop()
+				cancel()
 			}
 		}
 	})
@@ -62,12 +63,4 @@ func (a *app) Run() error {
 	return nil
 
 }
-func (a *app) Stop() {
-	a.cancel()
-}
 
-func NewApp() *app {
-	var app app
-	app.ctx, app.cancel = context.WithCancel(context.Background())
-	return &app
-}

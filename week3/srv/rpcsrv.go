@@ -2,6 +2,7 @@ package srv
 
 import (
 	"google.golang.org/grpc"
+	"log"
 	"net"
 )
 
@@ -17,7 +18,9 @@ func (h *rpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-	return h.server.Serve(listen)
+	err = h.server.Serve(listen)
+	log.Println("rpc server stop")
+	return err
 }
 func (h *rpcServer) Stop() error {
 	h.server.Stop()
